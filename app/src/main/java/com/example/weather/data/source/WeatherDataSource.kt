@@ -1,13 +1,13 @@
 package com.example.weather.data.source
 
-import com.example.weather.model.Weather
+import com.example.weather.data.model.Weather
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class WeatherDataSource {
+class WeatherDataSource : DataSource{
 
     private val openWeatherMapAPI: OpenWeatherMapAPI
 
@@ -19,33 +19,28 @@ class WeatherDataSource {
         openWeatherMapAPI = retrofit.create(OpenWeatherMapAPI::class.java)
     }
 
-    fun getWeatherByID(id: Long) {
+    override fun getWeatherByID(id: Long, callBack: DataSource.LoadWeatherCallBack) {
         val call: Call<Weather> = openWeatherMapAPI.loadWeatherByID(id, OpenWeatherMapAPI.API_KEY)
-        call.enqueue(object: Callback<Weather> {
-            override fun onFailure(call: Call<Weather>, t: Throwable) {
-                println(t.message)
-            }
-
-            override fun onResponse(call: Call<Weather>, response: Response<Weather>) {
-              if (response.body() != null) {
-                  val weather: Weather = response.body()!!
-              }
-            }
-
-        })
+        executeCall(call, callBack)
     }
 
-    fun getWeatherByName(city: String) {
+    override fun getWeatherByName(city: String, callBack: DataSource.LoadWeatherCallBack) {
         val call: Call<Weather> = openWeatherMapAPI.loadWeatherByName(city, OpenWeatherMapAPI.API_KEY)
-        call.equals(object: Callback<Weather> {
+        executeCall(call, callBack)
+    }
+
+    private fun executeCall(call: Call<Weather>, callBack: DataSource.LoadWeatherCallBack) {
+        call.enqueue(object : Callback<Weather> {
             override fun onFailure(call: Call<Weather>, t: Throwable) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                callBack.onFailure()
             }
 
             override fun onResponse(call: Call<Weather>, response: Response<Weather>) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                if (response.body() != null)
+                    callBack.onWeatherLoaded(response.body()!!.list!!)
+                else
+                    callBack.onFailure()
             }
-
         })
     }
 }

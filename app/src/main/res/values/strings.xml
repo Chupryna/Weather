@@ -2,4 +2,10 @@
     <string name="app_name">Weather</string>
     <string name="get">Отримати</string>
     <string name="not_network">Відсутнє з\'єднання з мережею</string>
+    <string name="clouds">Хмарність</string>
+    <string name="wind">Вітер</string>
+    <string name="humidity">Вологість</string>
+    <string name="pressure">Атмосферний тиск</string>
+    <string name="rain">Дощ</string>
+    <string name="failed_load_weather">Не вдалося завантажити погоду</string>
 </resources>

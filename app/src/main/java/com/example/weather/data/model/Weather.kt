@@ -1,4 +1,4 @@
-package com.example.weather.model
+package com.example.weather.data.model
 
 import com.google.gson.annotations.SerializedName
 
@@ -11,4 +11,5 @@ data class Weather(@SerializedName("cod")
                    @SerializedName("list")
                    val list: List<ListItem>?,
                    @SerializedName("city")
-                   val city: City)
+                   val city: City
+)

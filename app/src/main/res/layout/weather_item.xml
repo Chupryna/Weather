@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView
+            android:id="@+id/textDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textSize="22sp"
+            android:textColor="@android:color/black"
+            tools:text="23.03.2019 21:00"/>
+
+    <TextView
+            android:id="@+id/textTemperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textDate"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"
+            android:textSize="22sp"
+            android:textColor="@android:color/holo_red_dark"
+            tools:text="28 C"/>
+
+    <TextView
+            android:id="@+id/textWeatherState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textDate"
+            android:gravity="end"
+            android:textSize="22sp"
+            android:textColor="@android:color/holo_red_light"
+            tools:text="Сонячно"
+            app:layout_constraintStart_toEndOf="@+id/textTemperature"
+            android:layout_marginStart="16dp"/>
+
+    <TextView
+            android:id="@+id/textClouds"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textTemperature"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:text="@string/clouds"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"/>
+
+    <TextView
+            android:id="@+id/textCloudsValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textWeatherState"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            tools:text="80%"/>
+
+    <TextView
+            android:id="@+id/textWindSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textClouds"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:text="@string/wind"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"/>
+
+    <TextView
+            android:id="@+id/textWindSpeedValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textCloudsValue"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            tools:text="5 m/c"/>
+
+    <TextView
+            android:id="@+id/textHumidity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textWindSpeed"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:text="@string/humidity"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"/>
+
+    <TextView
+            android:id="@+id/textHumidityValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textWindSpeedValue"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            tools:text="50%"/>
+
+    <TextView
+            android:id="@+id/textPressure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textHumidity"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:text="@string/pressure"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"/>
+
+    <TextView
+            android:id="@+id/textPressureValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textHumidityValue"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            tools:text="800 mPa"/>
+
+    <TextView
+            android:id="@+id/textRain"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textPressure"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:text="@string/rain"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"/>
+
+    <TextView
+            android:id="@+id/textRainValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textPressureValue"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            tools:text="2 mm"/>
+
+    <View
+            android:id="@+id/divider"
+            android:layout_width="395dp"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/textRain"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"/>
+
+</android.support.constraint.ConstraintLayout>
