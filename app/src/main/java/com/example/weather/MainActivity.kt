@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import com.example.weather.data.source.WeatherDataSource
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -25,7 +26,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             return
         }
 
-        println(city)
+        val weatherDataSource = WeatherDataSource()
+        weatherDataSource.getWeatherByID(524901)
+
+       // println(city)
     }
 
     private fun isNetworkAvailable(): Boolean {
