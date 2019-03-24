@@ -45,4 +45,20 @@
 
     </android.support.v7.widget.RecyclerView>
 
+    <LinearLayout
+            android:id="@+id/containerProgressBar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="#99999999"
+            android:gravity="center"
+            android:visibility="gone">
+
+        <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"/>
+    </LinearLayout>
+
+
 </android.support.constraint.ConstraintLayout>
