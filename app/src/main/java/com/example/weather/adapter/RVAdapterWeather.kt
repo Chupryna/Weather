@@ -1,16 +1,16 @@
-package com.example.weather
+package com.example.weather.adapter
 
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.example.weather.R
 import com.example.weather.data.model.ListItem
 import kotlinx.android.synthetic.main.weather_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class RVAdapterWeather(list: List<ListItem>) : RecyclerView.Adapter<RVAdapterWeather.WeatherViewHolder>() {
+class RVAdapterWeather(list: List<ListItem>) : androidx.recyclerview.widget.RecyclerView.Adapter<RVAdapterWeather.WeatherViewHolder>() {
 
     private val listWeather = list
 
@@ -40,7 +40,7 @@ class RVAdapterWeather(list: List<ListItem>) : RecyclerView.Adapter<RVAdapterWea
             holder.textRain.text = "0 мм"
     }
 
-    class WeatherViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class WeatherViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         val textDate: TextView = itemView.textDate
         val textTemperature: TextView = itemView.textTemperature
         val textWeatherState: TextView = itemView.textWeatherState
