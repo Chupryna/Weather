@@ -30,5 +30,5 @@ data class WeatherIndicators (
     var state: String,
 
     @ColumnInfo(name = "forecast_id")
-    var forecastID: Long?
+    var forecastID: Long
 )

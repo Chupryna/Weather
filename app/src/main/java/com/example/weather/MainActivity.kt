@@ -12,7 +12,9 @@ import com.example.weather.adapter.RVAdapterWeather
 import com.example.weather.data.model.ListItem
 import com.example.weather.data.source.DataSource
 import com.example.weather.data.source.WeatherDataSource
+import com.example.weather.room.Forecast
 import com.example.weather.room.WeatherDatabase
+import com.example.weather.room.WeatherIndicators
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONArray
 import java.io.*
@@ -26,20 +28,6 @@ class MainActivity : AppCompatActivity() {
 
         initListeners()
         initAdapters()
-
-
-       /* val weatherDB = WeatherDatabase.getInstance(this@MainActivity)
-        val city = Forecast(null, "Lviv", 1234)
-        val wInd = WeatherIndicators(null, "2019", 7.8, 88, 1.3, 50,
-            1020.0, null, "Хмарно", null)
-        val wIn1 = WeatherIndicators(null, "2019", 7.9, 100, 8.3, 70,
-            1080.0, null, "Хмарно", null)
-        val weatherIndicators = listOf(wInd, wIn1)
-
-        weatherDB!!.forecastWeatherDao().insertCityAndWeatherIndicators(city, weatherIndicators)
-
-        val res = weatherDB.forecastWeatherDao().getWeatherIndicators()
-        println(res)*/
     }
 
     private fun initListeners() {
@@ -61,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         val json = reader.readText()
         val jsonArray = JSONArray(json)
 
-        val listOfCity: MutableList<String> = mutableListOf("Lviv")
+        val listOfCity: MutableList<String> = mutableListOf("Львів")
         /*for (i in 0 until jsonArray.length()) {
             val jsonObject = JSONObject(jsonArray[i].toString())
             val city = "${jsonObject.getString("city")}, ${jsonObject.getString("country")}"
@@ -74,7 +62,7 @@ class MainActivity : AppCompatActivity() {
     private fun onLoadWeather(v: View) {
         hideKeyboard(v)
         showProgress(true)
-        val city = editCity.text.toString().trim()
+        val city = editCity.text.toString().trim().toLowerCase()
 
         if(!isNetworkAvailable()) {
             Toast.makeText(this, R.string.not_network, Toast.LENGTH_SHORT).show()
@@ -88,15 +76,47 @@ class MainActivity : AppCompatActivity() {
                 val adapter = RVAdapterWeather(list)
                 recyclerShowWeather.adapter = adapter
 
-                val weatherDB = WeatherDatabase.getInstance(this@MainActivity)
-                val forecast = weatherDB!!.forecastWeatherDao().getForecastByCity(city)
-                if (forecast.isEmpty())
-                    println("132")
+                saveForecast(list)
             }
 
             override fun onFailure() {
                showProgress(false)
                 Toast.makeText(this@MainActivity, R.string.failed_load_weather, Toast.LENGTH_SHORT).show()
+            }
+
+            private fun saveForecast(list: List<ListItem>) {
+                val weatherDB = WeatherDatabase.getInstance(this@MainActivity)
+                val forecastList = weatherDB!!.forecastWeatherDao().getForecastByCity(city)
+                if (forecastList.isEmpty()) {
+                    val forecast = Forecast(null, city, list[0].dt)
+                    val weatherIndicatorsList = getWeatherIndicatorsList(list)
+                    weatherDB.forecastWeatherDao().insertForecastAndWeatherIndicators(forecast, weatherIndicatorsList)
+                } else if (forecastList[0].time != list[0].dt) {
+                    val forecast = Forecast(forecastList[0].id, forecastList[0].city, list[0].dt)
+                    val weatherIndicatorsList = getWeatherIndicatorsList(list)
+                    weatherDB.forecastWeatherDao().updateForecastAndWeatherIndicators(forecast, weatherIndicatorsList)
+                }
+                WeatherDatabase.destroyInstance()
+            }
+
+            private fun getWeatherIndicatorsList(list: List<ListItem>): MutableList<WeatherIndicators> {
+                val weatherIndicatorsList = mutableListOf<WeatherIndicators>()
+                for (item in list) {
+                    val weatherIndicators = WeatherIndicators(
+                        null,
+                        item.dtTxt,
+                        item.main.temp,
+                        item.clouds.all,
+                        item.wind.speed,
+                        item.main.humidity,
+                        item.main.pressure,
+                        item.rain?.H,
+                        item.weather!![0].description,
+                        0
+                    )
+                    weatherIndicatorsList.add(weatherIndicators)
+                }
+                return weatherIndicatorsList
             }
         })
     }

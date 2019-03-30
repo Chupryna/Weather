@@ -10,5 +10,5 @@ data class Forecast(
 
     var city: String,
 
-    var time: Long
+    var time: Int
 )
