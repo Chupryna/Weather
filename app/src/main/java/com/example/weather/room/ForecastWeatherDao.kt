@@ -35,9 +35,9 @@ abstract class ForecastWeatherDao {
 
     @Transaction
     open fun insertForecastAndWeatherIndicators(forecast: Forecast, weatherIndicators: List<WeatherIndicators>) {
-        val forecastIDId = insertForecast(forecast)
+        val forecastID = insertForecast(forecast)
         for (item in weatherIndicators)
-            item.forecastID = forecastIDId
+            item.forecastID = forecastID
         insertWeatherIndicators(weatherIndicators)
     }
 
@@ -50,4 +50,8 @@ abstract class ForecastWeatherDao {
             item.forecastID = forecast.id!!
         insertWeatherIndicators(weatherIndicators)
     }
+
+    @Transaction
+    @Query("SELECT * FROM forecast WHERE id = :id")
+    abstract fun getForecastWithWeatherIndicators(id: Long): ForecastWithWeatherIndicators
 }

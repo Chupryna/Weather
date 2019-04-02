@@ -8,4 +8,5 @@
     <string name="pressure">Атмосферний тиск</string>
     <string name="rain">Дощ</string>
     <string name="failed_load_weather">Не вдалося завантажити погоду</string>
+    <string name="load_weather_from_memory">Не вдалося завантажити погоду. Прогноз відтворений з пам\'яті пристрою</string>
 </resources>

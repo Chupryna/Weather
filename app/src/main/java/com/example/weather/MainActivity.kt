@@ -13,12 +13,10 @@ import com.example.weather.data.model.ListItem
 import com.example.weather.data.source.DataSource
 import com.example.weather.data.source.WeatherDataSource
 import com.example.weather.room.Forecast
+import com.example.weather.room.ForecastWithWeatherIndicators
 import com.example.weather.room.WeatherDatabase
 import com.example.weather.room.WeatherIndicators
 import kotlinx.android.synthetic.main.activity_main.*
-import org.json.JSONArray
-import java.io.*
-import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
 
@@ -43,14 +41,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getListOfCity(): MutableList<String> {
-        val inputStream: InputStream = resources.openRawResource(R.raw.city_short2)
-        val reader = InputStreamReader(inputStream, StandardCharsets.UTF_16)
+        val listOfCity: MutableList<String> = mutableListOf("Львів", "Київ", "Одеса", "Луцьк")
 
+        /*val inputStream: InputStream = resources.openRawResource(R.raw.city_short2)
+        val reader = InputStreamReader(inputStream, StandardCharsets.UTF_16)
         val json = reader.readText()
         val jsonArray = JSONArray(json)
 
-        val listOfCity: MutableList<String> = mutableListOf("Львів")
-        /*for (i in 0 until jsonArray.length()) {
+        for (i in 0 until jsonArray.length()) {
             val jsonObject = JSONObject(jsonArray[i].toString())
             val city = "${jsonObject.getString("city")}, ${jsonObject.getString("country")}"
             listOfCity.add(city)
@@ -60,65 +58,88 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onLoadWeather(v: View) {
-        hideKeyboard(v)
-        showProgress(true)
         val city = editCity.text.toString().trim().toLowerCase()
 
         if(!isNetworkAvailable()) {
+            loadWeatherFromMemory(city)
+
             Toast.makeText(this, R.string.not_network, Toast.LENGTH_SHORT).show()
             return
         }
 
+        hideKeyboard(v)
+        showProgress(true)
+
         val weatherDataSource = WeatherDataSource()
         weatherDataSource.getWeatherByName(city, object: DataSource.LoadWeatherCallBack{
             override fun onWeatherLoaded(list: List<ListItem>) {
-                showProgress(false)
-                val adapter = RVAdapterWeather(list)
+                val forecastWithWeatherIndicators = convertListItemToForecastWithWeatherIndicators(list, city)
+                val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
                 recyclerShowWeather.adapter = adapter
 
-                saveForecast(list)
+                showProgress(false)
+                saveForecast(forecastWithWeatherIndicators)
             }
 
             override fun onFailure() {
-               showProgress(false)
-                Toast.makeText(this@MainActivity, R.string.failed_load_weather, Toast.LENGTH_SHORT).show()
+                val forecastWithWeatherIndicators = loadWeatherFromMemory(city)
+                if (forecastWithWeatherIndicators != null) {
+                    val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
+                    recyclerShowWeather.adapter = adapter
+                    Toast.makeText(this@MainActivity, R.string.load_weather_from_memory, Toast.LENGTH_SHORT).show()
+                } else
+                    Toast.makeText(this@MainActivity, R.string.failed_load_weather, Toast.LENGTH_SHORT).show()
+                showProgress(false)
             }
 
-            private fun saveForecast(list: List<ListItem>) {
+            private fun saveForecast(forecastWithWeatherIndicators: ForecastWithWeatherIndicators) {
                 val weatherDB = WeatherDatabase.getInstance(this@MainActivity)
-                val forecastList = weatherDB!!.forecastWeatherDao().getForecastByCity(city)
+                val forecastList = weatherDB!!.forecastWeatherDao().getForecastByCity(forecastWithWeatherIndicators.forecast.city)
                 if (forecastList.isEmpty()) {
-                    val forecast = Forecast(null, city, list[0].dt)
-                    val weatherIndicatorsList = getWeatherIndicatorsList(list)
-                    weatherDB.forecastWeatherDao().insertForecastAndWeatherIndicators(forecast, weatherIndicatorsList)
-                } else if (forecastList[0].time != list[0].dt) {
-                    val forecast = Forecast(forecastList[0].id, forecastList[0].city, list[0].dt)
-                    val weatherIndicatorsList = getWeatherIndicatorsList(list)
-                    weatherDB.forecastWeatherDao().updateForecastAndWeatherIndicators(forecast, weatherIndicatorsList)
+                    weatherDB.forecastWeatherDao().insertForecastAndWeatherIndicators(forecastWithWeatherIndicators.forecast,
+                        forecastWithWeatherIndicators.weatherIndicators)
+                } else if (forecastList[0].time != forecastWithWeatherIndicators.forecast.time) {
+                    val forecast = Forecast(forecastList[0].id, forecastList[0].city, forecastWithWeatherIndicators.forecast.time)
+                    weatherDB.forecastWeatherDao().updateForecastAndWeatherIndicators(forecast, forecastWithWeatherIndicators.weatherIndicators)
                 }
                 WeatherDatabase.destroyInstance()
             }
-
-            private fun getWeatherIndicatorsList(list: List<ListItem>): MutableList<WeatherIndicators> {
-                val weatherIndicatorsList = mutableListOf<WeatherIndicators>()
-                for (item in list) {
-                    val weatherIndicators = WeatherIndicators(
-                        null,
-                        item.dtTxt,
-                        item.main.temp,
-                        item.clouds.all,
-                        item.wind.speed,
-                        item.main.humidity,
-                        item.main.pressure,
-                        item.rain?.H,
-                        item.weather!![0].description,
-                        0
-                    )
-                    weatherIndicatorsList.add(weatherIndicators)
-                }
-                return weatherIndicatorsList
-            }
         })
+    }
+
+    private fun convertListItemToForecastWithWeatherIndicators(list: List<ListItem>, city: String): ForecastWithWeatherIndicators {
+        val forecast = Forecast(null, city, list[0].dt)
+        val weatherIndicatorsList = mutableListOf<WeatherIndicators>()
+        for (item in list) {
+            val weatherIndicators = WeatherIndicators(
+                null,
+                item.dtTxt,
+                item.main.temp,
+                item.clouds.all,
+                item.wind.speed,
+                item.main.humidity,
+                item.main.pressure,
+                item.rain?.H,
+                item.weather!![0].description,
+                0
+            )
+            weatherIndicatorsList.add(weatherIndicators)
+        }
+
+        return ForecastWithWeatherIndicators(forecast, weatherIndicatorsList)
+    }
+
+    private fun loadWeatherFromMemory(city: String): ForecastWithWeatherIndicators? {
+        val weatherDB = WeatherDatabase.getInstance(this)
+        val forecastID = weatherDB!!.forecastWeatherDao().getForecastByCity(city)[0].id
+        var forecastWithWeatherIndicators: ForecastWithWeatherIndicators? = null
+        if (forecastID != null) {
+            forecastWithWeatherIndicators = WeatherDatabase.getInstance(this)!!
+                .forecastWeatherDao()
+                .getForecastWithWeatherIndicators(forecastID)
+        }
+        WeatherDatabase.destroyInstance()
+        return forecastWithWeatherIndicators
     }
 
     private fun isNetworkAvailable(): Boolean {
