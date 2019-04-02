@@ -59,15 +59,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun onLoadWeather(v: View) {
         val city = editCity.text.toString().trim().toLowerCase()
+        hideKeyboard(v)
 
         if(!isNetworkAvailable()) {
-            loadWeatherFromMemory(city)
-
-            Toast.makeText(this, R.string.not_network, Toast.LENGTH_SHORT).show()
+            val forecastWithWeatherIndicators = loadWeatherFromMemory(city)
+            if (forecastWithWeatherIndicators != null) {
+                val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
+                recyclerShowWeather.adapter = adapter
+                Toast.makeText(this@MainActivity, R.string.load_weather_from_memory, Toast.LENGTH_LONG).show()
+            } else
+                Toast.makeText(this@MainActivity, R.string.failed_load_weather, Toast.LENGTH_LONG).show()
             return
         }
 
-        hideKeyboard(v)
         showProgress(true)
 
         val weatherDataSource = WeatherDataSource()
