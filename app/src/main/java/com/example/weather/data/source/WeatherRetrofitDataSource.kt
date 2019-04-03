@@ -1,13 +1,14 @@
 package com.example.weather.data.source
 
 import com.example.weather.data.model.Weather
+import com.example.weather.data.source.retrofit_api.OpenWeatherMapAPI
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class WeatherDataSource : DataSource{
+class WeatherRetrofitDataSource : RetrofitDataSource{
 
     private val openWeatherMapAPI: OpenWeatherMapAPI
 
@@ -19,17 +20,17 @@ class WeatherDataSource : DataSource{
         openWeatherMapAPI = retrofit.create(OpenWeatherMapAPI::class.java)
     }
 
-    override fun getWeatherByID(id: Long, callBack: DataSource.LoadWeatherCallBack) {
+    override fun getWeatherByID(id: Long, callBack: RetrofitDataSource.LoadWeatherCallBack) {
         val call: Call<Weather> = openWeatherMapAPI.loadWeatherByID(id, OpenWeatherMapAPI.API_KEY)
         executeCall(call, callBack)
     }
 
-    override fun getWeatherByName(city: String, callBack: DataSource.LoadWeatherCallBack) {
+    override fun getWeatherByName(city: String, callBack: RetrofitDataSource.LoadWeatherCallBack) {
         val call: Call<Weather> = openWeatherMapAPI.loadWeatherByName(city, OpenWeatherMapAPI.API_KEY)
         executeCall(call, callBack)
     }
 
-    private fun executeCall(call: Call<Weather>, callBack: DataSource.LoadWeatherCallBack) {
+    private fun executeCall(call: Call<Weather>, callBack: RetrofitDataSource.LoadWeatherCallBack) {
         call.enqueue(object : Callback<Weather> {
             override fun onFailure(call: Call<Weather>, t: Throwable) {
                 callBack.onFailure()

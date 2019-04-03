@@ -1,4 +1,4 @@
-package com.example.weather.data.source
+package com.example.weather.data.source.retrofit_api
 
 import com.example.weather.data.model.Weather
 import retrofit2.Call

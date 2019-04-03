@@ -2,7 +2,7 @@ package com.example.weather.data.source
 
 import com.example.weather.data.model.ListItem
 
-interface DataSource {
+interface RetrofitDataSource {
 
     interface LoadWeatherCallBack{
         fun onWeatherLoaded(list: List<ListItem>)

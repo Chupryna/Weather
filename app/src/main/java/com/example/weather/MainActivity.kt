@@ -10,12 +10,9 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import com.example.weather.adapter.RVAdapterWeather
 import com.example.weather.data.model.ListItem
-import com.example.weather.data.source.DataSource
-import com.example.weather.data.source.WeatherDataSource
-import com.example.weather.room.Forecast
-import com.example.weather.room.ForecastWithWeatherIndicators
-import com.example.weather.room.WeatherDatabase
-import com.example.weather.room.WeatherIndicators
+import com.example.weather.data.source.RetrofitDataSource
+import com.example.weather.data.source.WeatherRetrofitDataSource
+import com.example.weather.data.source.WeatherRoomDataSource
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -62,31 +59,33 @@ class MainActivity : AppCompatActivity() {
         hideKeyboard(v)
 
         if(!isNetworkAvailable()) {
-            val forecastWithWeatherIndicators = loadWeatherFromMemory(city)
+            val forecastWithWeatherIndicators = WeatherRoomDataSource(this).loadWeatherFromMemory(city)
             if (forecastWithWeatherIndicators != null) {
                 val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
                 recyclerShowWeather.adapter = adapter
-                Toast.makeText(this@MainActivity, R.string.load_weather_from_memory, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, R.string.load_weather_from_memory, Toast.LENGTH_LONG).show()
             } else
-                Toast.makeText(this@MainActivity, R.string.failed_load_weather, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, R.string.failed_load_weather, Toast.LENGTH_LONG).show()
             return
         }
 
         showProgress(true)
 
-        val weatherDataSource = WeatherDataSource()
-        weatherDataSource.getWeatherByName(city, object: DataSource.LoadWeatherCallBack{
+        val weatherRetrofitDataSource = WeatherRetrofitDataSource()
+        weatherRetrofitDataSource.getWeatherByName(city, object: RetrofitDataSource.LoadWeatherCallBack{
             override fun onWeatherLoaded(list: List<ListItem>) {
-                val forecastWithWeatherIndicators = convertListItemToForecastWithWeatherIndicators(list, city)
+                val weatherRoomDataSource = WeatherRoomDataSource(this@MainActivity)
+                val forecastWithWeatherIndicators = weatherRoomDataSource.convertListItemToForecastWithWeatherIndicators(list, city)
+
                 val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
                 recyclerShowWeather.adapter = adapter
 
                 showProgress(false)
-                saveForecast(forecastWithWeatherIndicators)
+                weatherRoomDataSource.saveForecast(forecastWithWeatherIndicators)
             }
 
             override fun onFailure() {
-                val forecastWithWeatherIndicators = loadWeatherFromMemory(city)
+                val forecastWithWeatherIndicators = WeatherRoomDataSource(this@MainActivity).loadWeatherFromMemory(city)
                 if (forecastWithWeatherIndicators != null) {
                     val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
                     recyclerShowWeather.adapter = adapter
@@ -95,61 +94,13 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, R.string.failed_load_weather, Toast.LENGTH_SHORT).show()
                 showProgress(false)
             }
-
-            private fun saveForecast(forecastWithWeatherIndicators: ForecastWithWeatherIndicators) {
-                val weatherDB = WeatherDatabase.getInstance(this@MainActivity)
-                val forecastList = weatherDB!!.forecastWeatherDao().getForecastByCity(forecastWithWeatherIndicators.forecast.city)
-                if (forecastList.isEmpty()) {
-                    weatherDB.forecastWeatherDao().insertForecastAndWeatherIndicators(forecastWithWeatherIndicators.forecast,
-                        forecastWithWeatherIndicators.weatherIndicators)
-                } else if (forecastList[0].time != forecastWithWeatherIndicators.forecast.time) {
-                    val forecast = Forecast(forecastList[0].id, forecastList[0].city, forecastWithWeatherIndicators.forecast.time)
-                    weatherDB.forecastWeatherDao().updateForecastAndWeatherIndicators(forecast, forecastWithWeatherIndicators.weatherIndicators)
-                }
-                WeatherDatabase.destroyInstance()
-            }
         })
-    }
-
-    private fun convertListItemToForecastWithWeatherIndicators(list: List<ListItem>, city: String): ForecastWithWeatherIndicators {
-        val forecast = Forecast(null, city, list[0].dt)
-        val weatherIndicatorsList = mutableListOf<WeatherIndicators>()
-        for (item in list) {
-            val weatherIndicators = WeatherIndicators(
-                null,
-                item.dtTxt,
-                item.main.temp,
-                item.clouds.all,
-                item.wind.speed,
-                item.main.humidity,
-                item.main.pressure,
-                item.rain?.H,
-                item.weather!![0].description,
-                0
-            )
-            weatherIndicatorsList.add(weatherIndicators)
-        }
-
-        return ForecastWithWeatherIndicators(forecast, weatherIndicatorsList)
-    }
-
-    private fun loadWeatherFromMemory(city: String): ForecastWithWeatherIndicators? {
-        val weatherDB = WeatherDatabase.getInstance(this)
-        val forecastID = weatherDB!!.forecastWeatherDao().getForecastByCity(city)[0].id
-        var forecastWithWeatherIndicators: ForecastWithWeatherIndicators? = null
-        if (forecastID != null) {
-            forecastWithWeatherIndicators = WeatherDatabase.getInstance(this)!!
-                .forecastWeatherDao()
-                .getForecastWithWeatherIndicators(forecastID)
-        }
-        WeatherDatabase.destroyInstance()
-        return forecastWithWeatherIndicators
     }
 
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo = connectivityManager.allNetworks
-        if (networkInfo.isNotEmpty())
+        val networks = connectivityManager.allNetworks
+        if (networks.isNotEmpty())
             return true
 
         return false
