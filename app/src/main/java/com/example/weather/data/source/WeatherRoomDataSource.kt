@@ -13,8 +13,10 @@ class WeatherRoomDataSource(private val context: Context) : RoomDataSource {
         val weatherDB = WeatherDatabase.getInstance(context)
         val forecastList = weatherDB!!.forecastWeatherDao().getForecastByCity(forecastWithWeatherIndicators.forecast.city)
         if (forecastList.isEmpty()) {
-            weatherDB.forecastWeatherDao().insertForecastAndWeatherIndicators(forecastWithWeatherIndicators.forecast,
-                forecastWithWeatherIndicators.weatherIndicators)
+            weatherDB.forecastWeatherDao().insertForecastAndWeatherIndicators(
+                forecastWithWeatherIndicators.forecast,
+                forecastWithWeatherIndicators.weatherIndicators
+            )
         } else if (forecastList[0].time != forecastWithWeatherIndicators.forecast.time) {
             val forecast = Forecast(forecastList[0].id, forecastList[0].city, forecastWithWeatherIndicators.forecast.time)
             weatherDB.forecastWeatherDao().updateForecastAndWeatherIndicators(forecast, forecastWithWeatherIndicators.weatherIndicators)
@@ -24,10 +26,10 @@ class WeatherRoomDataSource(private val context: Context) : RoomDataSource {
 
     override fun loadWeatherFromMemory(city: String): ForecastWithWeatherIndicators? {
         val weatherDB = WeatherDatabase.getInstance(context)
-        val forecastID = weatherDB!!.forecastWeatherDao().getForecastByCity(city)[0].id
+        val forecastByCity = weatherDB!!.forecastWeatherDao().getForecastByCity(city)
         var forecastWithWeatherIndicators: ForecastWithWeatherIndicators? = null
-        if (forecastID != null) {
-            forecastWithWeatherIndicators = weatherDB.forecastWeatherDao().getForecastWithWeatherIndicators(forecastID)
+        if (forecastByCity.isNotEmpty()) {
+            forecastWithWeatherIndicators = weatherDB.forecastWeatherDao().getForecastWithWeatherIndicators(forecastByCity[0].id!!)
         }
         WeatherDatabase.destroyInstance()
         return forecastWithWeatherIndicators

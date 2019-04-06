@@ -16,7 +16,6 @@ abstract class WeatherDatabase: RoomDatabase() {
         fun getInstance(context: Context): WeatherDatabase? {
             if (instance == null)
                 instance = Room.databaseBuilder(context.applicationContext, WeatherDatabase::class.java, "weather")
-                    .allowMainThreadQueries()
                     .build()
             return instance
         }

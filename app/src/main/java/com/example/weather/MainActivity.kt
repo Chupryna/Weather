@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
@@ -17,12 +18,16 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var mDbWorkerThread: DbWorkerThread
+    private val mUiHandler = Handler()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         initListeners()
         initAdapters()
+        initDbWorker()
     }
 
     private fun initListeners() {
@@ -36,6 +41,12 @@ class MainActivity : AppCompatActivity() {
         val adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, listOfCity)
         editCity.setAdapter(adapter)
     }
+
+    private fun initDbWorker() {
+        mDbWorkerThread = DbWorkerThread("dbWorkerThread")
+        mDbWorkerThread.start()
+    }
+
 
     private fun getListOfCity(): MutableList<String> {
         val listOfCity: MutableList<String> = mutableListOf("Львів", "Київ", "Одеса", "Луцьк")
@@ -59,13 +70,7 @@ class MainActivity : AppCompatActivity() {
         hideKeyboard(v)
 
         if(!isNetworkAvailable()) {
-            val forecastWithWeatherIndicators = WeatherRoomDataSource(this).loadWeatherFromMemory(city)
-            if (forecastWithWeatherIndicators != null) {
-                val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
-                recyclerShowWeather.adapter = adapter
-                Toast.makeText(this, R.string.load_weather_from_memory, Toast.LENGTH_LONG).show()
-            } else
-                Toast.makeText(this, R.string.failed_load_weather, Toast.LENGTH_LONG).show()
+            onLoadWeatherFromMemory(city)
             return
         }
 
@@ -81,20 +86,29 @@ class MainActivity : AppCompatActivity() {
                 recyclerShowWeather.adapter = adapter
 
                 showProgress(false)
-                weatherRoomDataSource.saveForecast(forecastWithWeatherIndicators)
+                val task = Runnable {  weatherRoomDataSource.saveForecast(forecastWithWeatherIndicators) }
+                mDbWorkerThread.postTask(task)
             }
 
             override fun onFailure() {
-                val forecastWithWeatherIndicators = WeatherRoomDataSource(this@MainActivity).loadWeatherFromMemory(city)
+                onLoadWeatherFromMemory(city)
+            }
+        })
+    }
+
+    private fun onLoadWeatherFromMemory(city: String) {
+        val task = Runnable {
+            val forecastWithWeatherIndicators = WeatherRoomDataSource(this).loadWeatherFromMemory(city)
+            mUiHandler.post {
                 if (forecastWithWeatherIndicators != null) {
                     val adapter = RVAdapterWeather(forecastWithWeatherIndicators)
                     recyclerShowWeather.adapter = adapter
-                    Toast.makeText(this@MainActivity, R.string.load_weather_from_memory, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.load_weather_from_memory, Toast.LENGTH_LONG).show()
                 } else
-                    Toast.makeText(this@MainActivity, R.string.failed_load_weather, Toast.LENGTH_SHORT).show()
-                showProgress(false)
+                    Toast.makeText(this, R.string.failed_load_weather, Toast.LENGTH_LONG).show()
             }
-        })
+        }
+        mDbWorkerThread.postTask(task)
     }
 
     private fun isNetworkAvailable(): Boolean {
@@ -116,5 +130,10 @@ class MainActivity : AppCompatActivity() {
             containerProgressBar.visibility = View.VISIBLE
         else
             containerProgressBar.visibility = View.GONE
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mDbWorkerThread.quit()
     }
 }
